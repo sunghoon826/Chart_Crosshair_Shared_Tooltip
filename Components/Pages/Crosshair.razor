@@ -5,44 +5,30 @@
 @inject NavigationManager NavigationManager
 <div class="control-section" align='center'>
     <SfChart Title="Conns, Inc Stock Details" Width="@Width" Theme="@Theme">
-        <ChartEvents ChartMouseClick="OnMouseEvent" ChartMouseDown="OnMouseDownEvent"></ChartEvents>
+        <ChartEvents ChartMouseClick="OnMouseEvent"></ChartEvents>
         <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MMM">
             <ChartAxisMajorGridLines Width="1"></ChartAxisMajorGridLines>
-            <ChartAxisCrosshairTooltip Enable="false" ></ChartAxisCrosshairTooltip>
+            <ChartAxisCrosshairTooltip Enable="false"></ChartAxisCrosshairTooltip>
             @if (isClicked)
             {
-                <ChartStriplines>
-                    <ChartStripline Start="@StartValue2" Size="3" SizeType="SizeType.Hours" Color="red" />
-                </ChartStriplines>
-                <ChartStriplines>
-                    <ChartStripline Start="@StartValue3" Size="3" SizeType="SizeType.Hours" Color="red" />
-                </ChartStriplines>
-            @*     <ChartStriplines>
-                    <ChartStripline Start="@StartValue4" Size="3" SizeType="SizeType.Hours" Color="red" />
-                </ChartStriplines> *@
+                @foreach (var stripline in GenerateStriplines())
+                {
+                    <ChartStriplines>
+                        <ChartStripline Start="@stripline.Start" Size="3" SizeType="SizeType.Hours" Color="red" />
+                    </ChartStriplines>
+                }
             }
         </ChartPrimaryXAxis>
         <ChartPrimaryYAxis Minimum="83" Maximum="87" Interval="1" Title="Million in USD"
                            LabelFormat="{value}M" RowIndex="0">
             <ChartAxisCrosshairTooltip Enable="false"></ChartAxisCrosshairTooltip>
-      @*       @if (isClicked)
-            {
-                <ChartStriplines>
-                    <ChartStripline Start="@StartValue" Size="0.01" Color="red" />
-                </ChartStriplines>
-            } *@
         </ChartPrimaryYAxis>
         <ChartArea>
             <ChartAreaBorder Width="0"></ChartAreaBorder>
         </ChartArea>
         <ChartLegendSettings Visible="false" />
         <ChartZoomSettings EnablePinchZooming="false" EnableSelectionZooming="false" Mode="ZoomMode.X"></ChartZoomSettings>
-        
-        
 
-        
-        
-        
         <ChartAxes>
             <ChartAxis RowIndex="0" OpposedPosition="true" Minimum="82" Maximum="88" Interval="2" Name="yAxis" Title="Million in USD (Stock)">
                 <ChartAxisCrosshairTooltip Enable="true"></ChartAxisCrosshairTooltip>
@@ -51,7 +37,6 @@
         </ChartAxes>
         <ChartSeriesCollection>
             <ChartSeries DataSource="@ChartPoints" Type="ChartSeriesType.Line" XName="Period" YName="High" Width="2" Opacity="1">
-                @* <ChartSeriesBorder Color="transparent"></ChartSeriesBorder> *@
                 <ChartMarker Visible="true" Height="7" Width="7" IsFilled="true"></ChartMarker>
             </ChartSeries>
             <ChartSeries DataSource="@ChartPoints" Type="ChartSeriesType.HiloOpenClose" XName="Period" YAxisName="yAxis" High="High" Low="Low" Open="Open" Close="Close"
@@ -60,9 +45,8 @@
             </ChartSeries>
         </ChartSeriesCollection>
 
-        <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical" ></ChartCrosshairSettings>
+        <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
         <ChartTooltipSettings Enable="true" Shared="true">
-
         </ChartTooltipSettings>
     </SfChart>
 
@@ -90,37 +74,21 @@
     public void OnMouseEvent(ChartMouseEventArgs args)
     {
         isClicked = true;
-        // StartValue2 = Convert.ToDateTime(args.AxisData["PrimaryXAxis"]);
         StartValue2 = CalculateClickedMarkerXAxisCoordinate(args);
         StartValue3 = StartValue2.AddDays(10);
-        // 클릭된 위치와 데이터 포인트 간의 거리 계산
         var closestPoint = FindClosestDataPoint(ChartPoints, StartValue2);
 
-        // 가장 가까운 데이터 포인트에 대한 작업 실행
         if (closestPoint != null)
         {
-            // 선택된 데이터 포인트에 대한 처리
             HandleSelectedDataPoint(closestPoint);
         }
 
         StateHasChanged();
     }
-    public void OnMouseDownEvent(ChartMouseEventArgs args)
-    {
-        isClicked = true;
-        StartValue2 = Convert.ToDateTime(args.AxisData["PrimaryXAxis"]);
-       
-        // StartValue4 = StartValue2.AddDays(20);
-        // 클릭된 위치와 데이터 포인트 간의 거리 계산
 
-       
-    }
     private DateTime CalculateClickedMarkerXAxisCoordinate(ChartMouseEventArgs args)
     {
-        // 클릭된 위치의 X축 정보
         var clickedXValue = Convert.ToDateTime(args.AxisData["PrimaryXAxis"]);
-
-        // 차트 데이터 포인트 중 클릭된 위치와 가장 가까운 포인트 찾기
         DateTime closestXAxisCoordinate = DateTime.MinValue;
         double minDifference = double.MaxValue;
 
@@ -136,6 +104,7 @@
 
         return closestXAxisCoordinate;
     }
+
     private CrosshairData FindClosestDataPoint(List<CrosshairData> dataPoints, DateTime clickedTime)
     {
         CrosshairData closestPoint = null;
@@ -157,6 +126,33 @@
     private void HandleSelectedDataPoint(CrosshairData dataPoint)
     {
         xText = $"Selected Date: {dataPoint.Period}";
+    }
+
+    private IEnumerable<ChartStripline> GenerateStriplines()
+    {
+        var striplines = new List<ChartStripline>();
+        TimeSpan interval = StartValue3 - StartValue2;
+        striplines.Add(new ChartStripline
+            {
+                Start = StartValue2,
+                Size = 3,
+                SizeType = SizeType.Hours,
+            // 기준선을 구분하기 위해 다른 색상을 사용할 수 있습니다.
+            });
+
+        for (int i = -7; i <= 7; i++)
+        {
+            if (i == 0) continue;
+            striplines.Add(new ChartStripline
+                {
+                    Start = StartValue2 + TimeSpan.FromTicks(interval.Ticks * i),
+                    Size = 3,
+                    SizeType = SizeType.Hours,
+                   
+                });
+        }
+
+        return striplines;
     }
 
     public List<CrosshairData> ChartPoints { get; set; } = new List<CrosshairData>
