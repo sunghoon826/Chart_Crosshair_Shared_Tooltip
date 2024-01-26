@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 <div class="control-section" align='center'>
     <SfChart Title="Conns, Inc Stock Details" Width="@Width" Theme="@Theme">
-        <ChartEvents ChartMouseClick="OnMouseEvent"></ChartEvents>
+        <ChartEvents ChartMouseClick="OnMouseEvent" ChartMouseDown="OnMouseDownEvent"></ChartEvents>
         <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" Format="MMM">
             <ChartAxisMajorGridLines Width="1"></ChartAxisMajorGridLines>
             <ChartAxisCrosshairTooltip Enable="false" ></ChartAxisCrosshairTooltip>
@@ -14,6 +14,12 @@
                 <ChartStriplines>
                     <ChartStripline Start="@StartValue2" Size="3" SizeType="SizeType.Hours" Color="red" />
                 </ChartStriplines>
+                <ChartStriplines>
+                    <ChartStripline Start="@StartValue3" Size="3" SizeType="SizeType.Hours" Color="red" />
+                </ChartStriplines>
+            @*     <ChartStriplines>
+                    <ChartStripline Start="@StartValue4" Size="3" SizeType="SizeType.Hours" Color="red" />
+                </ChartStriplines> *@
             }
         </ChartPrimaryXAxis>
         <ChartPrimaryYAxis Minimum="83" Maximum="87" Interval="1" Title="Million in USD"
@@ -30,7 +36,7 @@
             <ChartAreaBorder Width="0"></ChartAreaBorder>
         </ChartArea>
         <ChartLegendSettings Visible="false" />
-        <ChartZoomSettings EnablePinchZooming="true" EnableSelectionZooming="true" Mode="ZoomMode.X"></ChartZoomSettings>
+        <ChartZoomSettings EnablePinchZooming="false" EnableSelectionZooming="false" Mode="ZoomMode.X"></ChartZoomSettings>
         
         
 
@@ -60,8 +66,9 @@
         </ChartTooltipSettings>
     </SfChart>
 
-    <h3>@xText</h3>
-    <h3>@yText</h3>
+    <h3>@StartValue2.ToString()</h3>
+    <h3>@StartValue3.ToString()</h3>
+    <h3>@StartValue4.ToString()</h3>
 </div>
 @code {
 
@@ -76,6 +83,8 @@
 
     public string xText { get; set; }
     public string yText { get; set; }
+    public DateTime StartValue3 { get; set; }
+    public DateTime StartValue4 { get; set; }
 
 
     public void OnMouseEvent(ChartMouseEventArgs args)
@@ -83,6 +92,7 @@
         isClicked = true;
         // StartValue2 = Convert.ToDateTime(args.AxisData["PrimaryXAxis"]);
         StartValue2 = CalculateClickedMarkerXAxisCoordinate(args);
+        StartValue3 = StartValue2.AddDays(10);
         // 클릭된 위치와 데이터 포인트 간의 거리 계산
         var closestPoint = FindClosestDataPoint(ChartPoints, StartValue2);
 
@@ -94,6 +104,16 @@
         }
 
         StateHasChanged();
+    }
+    public void OnMouseDownEvent(ChartMouseEventArgs args)
+    {
+        isClicked = true;
+        StartValue2 = Convert.ToDateTime(args.AxisData["PrimaryXAxis"]);
+       
+        // StartValue4 = StartValue2.AddDays(20);
+        // 클릭된 위치와 데이터 포인트 간의 거리 계산
+
+       
     }
     private DateTime CalculateClickedMarkerXAxisCoordinate(ChartMouseEventArgs args)
     {
