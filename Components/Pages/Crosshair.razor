@@ -3,6 +3,24 @@
 @using Syncfusion.Blazor
 @using Syncfusion.Blazor.Charts
 @inject NavigationManager NavigationManager
+<div id="resizeHandle" style="width: 10px; height: 10px; background: blue; cursor: pointer;"></div>
+
+<script>
+    // JavaScript로 드래그 이벤트 핸들링
+    var resizeHandle = document.getElementById('resizeHandle');
+    resizeHandle.onmousedown = function(event) {
+        document.onmousemove = function(event) {
+            // 여기에 드래그 로직을 구현
+        };
+        document.onmouseup = function() {
+            document.onmousemove = null;
+            document.onmouseup = null;
+
+            // Blazor 메소드 호출 예시
+            DotNet.invokeMethodAsync('Chart_Crosshair_Shared_Tooltip', 'UpdateStartValue3', newDate);
+        };
+    };
+</script>
 <div class="control-section" align='center'>
     <SfChart Title="Conns, Inc Stock Details" Width="@Width" Theme="@Theme">
         <ChartEvents ChartMouseClick="OnMouseEvent"></ChartEvents>
@@ -55,7 +73,6 @@
     <h3>@StartValue4.ToString()</h3>
 </div>
 @code {
-
     private Theme Theme { get; set; }
     public string Width { get; set; } = "90%";
 
@@ -69,7 +86,6 @@
     public string yText { get; set; }
     public DateTime StartValue3 { get; set; }
     public DateTime StartValue4 { get; set; }
-
 
     public void OnMouseEvent(ChartMouseEventArgs args)
     {
@@ -128,16 +144,30 @@
         xText = $"Selected Date: {dataPoint.Period}";
     }
 
+    [JSInvokable]
+    public static Task UpdateStartValue3(DateTime newDate)
+    {
+        StartValue3 = newDate;
+        UpdateStriplines();
+        return Task.CompletedTask;
+    }
+
+    private void UpdateStriplines()
+    {
+        // StartValue3 업데이트에 따른 Stripline 재계산 로직
+    }
+
     private IEnumerable<ChartStripline> GenerateStriplines()
     {
         var striplines = new List<ChartStripline>();
         TimeSpan interval = StartValue3 - StartValue2;
+
         striplines.Add(new ChartStripline
             {
                 Start = StartValue2,
                 Size = 3,
                 SizeType = SizeType.Hours,
-            // 기준선을 구분하기 위해 다른 색상을 사용할 수 있습니다.
+                Color = "blue"
             });
 
         for (int i = -7; i <= 7; i++)
@@ -148,7 +178,7 @@
                     Start = StartValue2 + TimeSpan.FromTicks(interval.Ticks * i),
                     Size = 3,
                     SizeType = SizeType.Hours,
-                   
+                    Color = "red"
                 });
         }
 
